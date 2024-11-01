@@ -1,0 +1,99 @@
+# Instalar y cargar el paquete ISLR2
+install.packages("ISLR2")
+library(ISLR2)
+
+# Cargar los datos de NCI60
+data("NCI60")
+datos.nci <- NCI60$data
+
+# Verificar las dimensiones y las primeras filas
+dim(datos.nci)
+head(datos.nci)[, 1:6]
+
+# Estandarización de los datos
+datos.nci <- scale(datos.nci, center = TRUE, scale = TRUE)
+head(datos.nci)[, 1:6]
+
+# Tipos de cáncer distintos en el set de datos
+unique(NCI60$labs)
+
+# Número de muestras por tipo de cáncer
+table(NCI60$labs)
+
+# K-means
+
+# Asignación de semilla para resultados reproducibles
+set.seed(2)
+
+# K-means clustering con K = 4 y 20 asignaciones aleatorias de clústeres iniciales 
+k.means <- kmeans(x = datos.nci, centers = 4, nstart = 20)
+
+# Suma de cuadrados intra-cluster individual
+k.means$withinss
+
+# Suma de cuadrados intra-cluster total
+k.means$tot.withinss
+
+# Asignación de clusters de cada observación
+clusteres.km <- k.means$cluster
+
+table(clusteres.km, NCI60$labs)
+
+# Calcular silhouette scores 
+library(cluster)
+silhouette_scores = c()
+for (k in 2:30) {
+  kmeans_result = kmeans(datos.nci, centers = k, nstart = 20)
+  silhouette_scores[k - 1] = mean(silhouette(kmeans_result$cluster, dist(datos.nci))[, 3])
+}
+
+# Visualización silhouette scores
+plot(2:30, silhouette_scores, type = "b", pch = 19,
+     xlab = "Number of Clusters (K)",
+     ylab = "Silhouette Score",
+     main = "Silhouette Scores for K-means Clustering")
+
+# Identicando el número óptimo de clusters
+optimal_k = which.max(silhouette_scores) + 1
+cat("Optimal Number of Clusters:", optimal_k, "\n")
+
+# K-means clustering con el número óptimo de clusters
+kmeans_optimal = kmeans(datos.nci, centers = optimal_k, nstart = 20)
+
+Resolución en R ALGORITMOS K-PROTOTYPES
+install.packages("clustMixType")
+library(clustMixType)
+
+# Generar datos numéricos (cantidad y frecuencia de las transacciones)
+set.seed(123)
+X <- cbind(matrix(runif(200, 0, 100), ncol = 2),
+           matrix(sample(0:3, 200, replace = TRUE), ncol = 2))
+
+# Convertir la matriz en un data frame y definir las variables categóricas
+X <- as.data.frame(X)
+colnames(X) <- c("cantidad", "frecuencia", "grupo_edad", "estado_civil")
+
+# Convertir las variables categóricas a factor
+X$grupo_edad <- as.factor(X$grupo_edad)
+X$estado_civil <- as.factor(X$estado_civil)
+
+# Visualizar las primeras filas del dataset
+head(X)
+
+# Aplicar el algoritmo k-Prototypes con 3 clusters
+set.seed(123)
+kproto_result <- kproto(X, k = 3)
+
+# Imprimir los centroides de los clusters
+print(kproto_result$centers)
+
+# Asignación de clusters para cada observación
+clusters <- kproto_result$cluster
+table(clusters)
+
+# Visualización básica de los clusters
+plot(X[,1:2], col = clusters, pch = 19, 
+     xlab = "Cantidad", ylab = "Frecuencia", 
+     main = "Segmentación de Clientes con k-Prototypes")
+
+

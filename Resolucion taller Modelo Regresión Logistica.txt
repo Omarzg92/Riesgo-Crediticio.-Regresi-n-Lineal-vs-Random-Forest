@@ -1,0 +1,56 @@
+# Cargar librerías necesarias
+library(tidyverse)
+
+# Cargar datos (asegúrate de que el archivo 'diabetes.csv' esté en tu directorio de trabajo)
+data <- read_csv("diabetes.csv")
+
+# Ver las primeras filas del dataset
+head(data)
+
+# Resumen de los datos
+summary(data)
+
+# Verificar si hay valores faltantes
+colSums(is.na(data))
+
+# Convertir la variable de resultado a factor (si no lo está ya)
+data$Outcome <- as.factor(data$Outcome)
+
+# Ajustar un modelo logístico
+model <- glm(Outcome ~ Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + DiabetesPedigreeFunction + Age, data = data, family = binomial)
+
+# Resumen del modelo
+summary(model)
+
+# Predicciones del modelo
+predictions <- predict(model, data, type = "response")
+predicted_classes <- ifelse(predictions > 0.5, 1, 0)
+
+# Crear una matriz de confusión
+confusion_matrix <- table(Predicted = predicted_classes, Actual = data$Outcome)
+
+# Calcular la precisión del modelo
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+# Mostrar la matriz de confusión y la precisión
+print(confusion_matrix)
+print(paste("Accuracy:", round(accuracy, 4)))
+
+# Coeficientes del modelo
+coef(model)
+
+# Odds ratios
+exp(coef(model))
+
+# Cargar librerías para visualización
+library(ggplot2)
+
+# Relación entre Glucosa y Diabetes
+ggplot(data, aes(x = Glucose, y = Outcome)) +
+  geom_jitter(width = 0.1, height = 0.1) +
+  labs(title = "Relación entre Glucosa y Diabetes", x = "Concentración de Glucosa", y = "Outcome (1: Diabetes, 0: No Diabetes)")
+
+# Relación entre IMC y Diabetes
+ggplot(data, aes(x = BMI, y = Outcome)) +
+  geom_jitter(width = 0.1, height = 0.1) +
+  labs(title = "Relación entre IMC y Diabetes", x = "Índice de Masa Corporal", y = "Outcome (1: Diabetes, 0: No Diabetes)")
